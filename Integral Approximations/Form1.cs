@@ -11,6 +11,10 @@ using System.Collections.ObjectModel;
 using Mathos.Calculus;
 using Mathos.Parser;
 
+using System.Threading;
+using System.Threading.Tasks;
+using System.Diagnostics;
+
 namespace Integral_Approximations
 {
     public partial class Form1 : Form
@@ -35,24 +39,45 @@ namespace Integral_Approximations
 
             try
             {
-                watch.Start();
-                label7.Text = IntegralCalculus.Integrate(x => Eval(expression, x), Convert.ToDouble(textBox2.Text), Convert.ToDouble(textBox3.Text), IntegralCalculus.IntegrationAlgorithm.RectangleMethod, Convert.ToDouble(textBox4.Text)).ToString();
-                watch.Stop();
-                label16.Text = watch.ElapsedMilliseconds.ToString();
-                watch.Reset();
+                string[] results = new string[6];
+                Task[] tasks = new Task[3];
+                
+                tasks[0] = Task.Factory.StartNew(delegate() {
+                    Stopwatch sw = new Stopwatch();
+                    sw.Start();
+                    results[0] = IntegralCalculus.Integrate(x => Eval(expression, x), Convert.ToDouble(textBox2.Text), Convert.ToDouble(textBox3.Text), IntegralCalculus.IntegrationAlgorithm.RectangleMethod, Convert.ToDouble(textBox4.Text)).ToString();
+                    sw.Stop();
+                    results[3] = sw.ElapsedMilliseconds.ToString();
+                });
 
-                watch.Start();
-                label10.Text = IntegralCalculus.Integrate(x => Eval(expression, x) , Convert.ToDouble(textBox2.Text), Convert.ToDouble(textBox3.Text), IntegralCalculus.IntegrationAlgorithm.TrapezoidalRule, Convert.ToDouble(textBox4.Text)).ToString();
-                watch.Stop();
-                label15.Text = watch.ElapsedMilliseconds.ToString();
-                watch.Reset();
+                tasks[1] = Task.Factory.StartNew(delegate()
+                {
+                    Stopwatch sw = new Stopwatch();
+                    sw.Start();
+                    results[1] = IntegralCalculus.Integrate(x => Eval(expression, x), Convert.ToDouble(textBox2.Text), Convert.ToDouble(textBox3.Text), IntegralCalculus.IntegrationAlgorithm.TrapezoidalRule, Convert.ToDouble(textBox4.Text)).ToString();
+                    sw.Stop();
+                    results[2] = sw.ElapsedMilliseconds.ToString();
+                });
 
-                watch.Start();
-                label12.Text = IntegralCalculus.Integrate(x => Eval(expression, x), Convert.ToDouble(textBox2.Text), Convert.ToDouble(textBox3.Text), IntegralCalculus.IntegrationAlgorithm.SimpsonsRule, Convert.ToDouble(textBox4.Text)).ToString();
-                watch.Stop();
+                tasks[2] = Task.Factory.StartNew(delegate()
+                {
+                    Stopwatch sw = new Stopwatch();
+                    sw.Start();
+                    results[4] = IntegralCalculus.Integrate(x => Eval(expression, x), Convert.ToDouble(textBox2.Text), Convert.ToDouble(textBox3.Text), IntegralCalculus.IntegrationAlgorithm.SimpsonsRule, Convert.ToDouble(textBox4.Text)).ToString();
+                    sw.Stop();
 
-                label14.Text = watch.ElapsedMilliseconds.ToString();
-                watch.Reset();
+                    results[5] = sw.ElapsedMilliseconds.ToString();
+                });
+
+                Task.WaitAll(tasks);
+
+                label7.Text = results[0];
+                label10.Text = results[1];
+                label15.Text = results[2];
+                label16.Text = results[3];
+                label12.Text = results[4];
+                label14.Text = results[5];
+
             }
             catch (Exception e)
             {
